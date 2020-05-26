@@ -1,0 +1,552 @@
+openapi: 3.0.3
+info:
+    title: Schrodinger's Box
+    version: 1.0.0
+servers:
+-   url: 'http://localhost:8080/api'
+paths:
+    /token:
+        post:
+            summary: create a token with a redirection URL to authenticate user
+            operationId: token.create
+            tags:
+            -   authentication
+            requestBody:
+                required: true
+                content:
+                    'application/vnd.api+json':
+                        schema:
+                            type: object
+                            required:
+                            -   data
+                            properties:
+                                data:
+                                    $ref: '#/components/schemas/Token'
+                        examples:
+                            token:
+                                $ref: '#/components/examples/TokenEmpty'
+            responses:
+                '201':
+                    description: token created, redirect user to login
+                    content:
+                        'application/vnd.api+json':
+                            schema: 
+                                type: object
+                                required:
+                                -   data
+                                properties:
+                                    data:
+                                        $ref: '#/components/schemas/Token'
+                            examples:
+                                token:
+                                    $ref: '#/components/examples/TokenAuth'
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+    /user:
+        get:
+            summary: retrieve information of a specific user
+            operationId: user.get
+            tags:
+            -   user
+            parameters:
+            -   $ref: '#/components/parameters/PathID'
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            responses:
+                '200':
+                    description: user object is successfully found
+                    content:
+                        'application/vnd.api+json':
+                            schema: 
+                                type: object
+                                required:
+                                -   data
+                                properties:
+                                    data:
+                                        $ref: '#/components/schemas/User'
+                            examples:
+                                user:
+                                    $ref: '#/components/examples/UserAllAttributes'
+                                userPartialAttributes:
+                                    $ref: '#/components/examples/UserPartialAttributes'
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+        post:
+            summary: create a new user linked to the NUSID provided by the token
+            operationId: user.create
+            tags:
+            -   user
+            parameters:
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            requestBody:
+                required: true
+                content:
+                    'application/vnd.api+json':
+                        schema: 
+                            type: object
+                            required:
+                            -   data
+                            properties:
+                                data:
+                                    $ref: '#/components/schemas/User'
+                        examples:
+                            user:
+                                $ref: '#/components/examples/UserNew'
+            responses:
+                '201':
+                    description: user object is created with an assigned id
+                    content:
+                        'application/vnd.api+json':
+                            schema: 
+                                type: object
+                                required:
+                                -   data
+                                properties:
+                                    data:
+                                        $ref: '#/components/schemas/User'
+                            examples:
+                                user:
+                                    $ref: '#/components/examples/UserAllAttributes'
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+        patch:
+            summary: update an user object
+            operationId: user.update
+            tags:
+            -   user
+            parameters:
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            requestBody:
+                required: true
+                content:
+                    'application/vnd.api+json':
+                        schema: 
+                            type: object
+                            required:
+                            -   data
+                            properties:
+                                data:
+                                    $ref: '#/components/schemas/User'
+                        examples:
+                            # nusid cannot be updated - hence full update is not applicable here
+                            user:
+                                $ref: '#/components/examples/UserPartialAttributes'
+            responses:
+                '201':
+                    description: user object is updated with attributes provided by BOTH the client and the server
+                    content:
+                        'application/vnd.api+json':
+                            schema: 
+                                type: object
+                                required:
+                                -   data
+                                properties:
+                                    data:
+                                        $ref: '#/components/schemas/User'
+                            examples:
+                                user:
+                                    $ref: '#/components/examples/UserAllAttributes'
+                '204':
+                    description: user object is updated with ONLY attributes provided by the client
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+    /event:
+        get:
+            summary: retrieve information of a specific event
+            operationId: event.get
+            tags:
+            -   event
+            parameters:
+            -   $ref: '#/components/parameters/PathID'
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            responses:
+                '200':
+                    description: event object is successfully found
+                    content:
+                        'application/vnd.api+json':
+                            schema: 
+                                type: object
+                                required:
+                                -   data
+                                properties:
+                                    data:
+                                        $ref: '#/components/schemas/Event'
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+components:
+    schemas:
+        Token:
+            type: object
+            required:
+                - type
+            properties:
+                type:
+                    description: type of Token object, which is just `token`
+                    type: string
+                    enum:
+                    -   token
+                id:
+                    $ref: '#/components/x-definitions/ID'
+                attributes:
+                    type: object
+                    properties:
+                        secret:
+                            $ref: '#/components/x-definitions/Secret'
+                        status:
+                            description: status of the token
+                            type: string
+                            enum:
+                                - created
+                                - active
+                                - expired
+                                - destroyed
+                        nusid:
+                            $ref: '#/components/x-definitions/NUSID'
+                links:
+                    type: object
+                    properties:
+                        auth:
+                            description: URL for users to prove their claimed identities
+                            type: string
+        User:
+            type: object
+            required:
+            -   type
+            -   attributes
+            properties:
+                type:
+                    description: type of User object, which is just `user`
+                    type: string
+                    enum:
+                    -   user
+                id:
+                    $ref: '#/components/x-definitions/ID'
+                attributes:
+                    type: object
+                    properties:
+                        nickname:
+                            description: a nickname defined by the user when it is first created
+                            type: string
+                        nusid:
+                            $ref: '#/components/x-definitions/NUSID'
+                        email:
+                            description: email of the user, whether returning it depends on user's privacy setting
+                            type: string
+                            format: email
+                        fullname:
+                            description: full name of the user, whether returning it depends on user's privacy setting
+                            type: string
+        Event:
+            type: object
+            required:
+            -   type
+            -   attributes
+            properties:
+                type:
+                    description: type of Event object, which is just `event`
+                    type: string
+                    enum:
+                    -   event
+                id:
+                    $ref: '#/components/x-definitions/ID'
+                attributes:
+                    type: object
+                    properties:
+                        title:
+                            description: title of the event which will be showned at places like search results
+                            type: string
+                        time_begin:
+                            $ref: '#/components/x-definitions/DateTime'
+                        time_end:
+                            $ref: '#/components/x-definitions/DateTime'
+                        organizer:
+                            $ref: '#/components/x-definitions/NUSID'
+                        location:
+                            oneOf:
+                            -   $ref: '#/components/x-definitions/LocationOnline'
+                            -   $ref: '#/components/x-definitions/LocationPhysical'
+                        type:
+                            description: type of this event
+                            type: string       
+    # definitions of data types
+    x-definitions:
+        Errors:
+            description: a collection of error information returned to client
+            type: object
+            required:
+            -   errors
+            properties:
+                errors:
+                    type: array
+                    items:
+                        type: object
+                        required:
+                        -   status
+                        -   code
+                        -   title
+                        properties:
+                            status:
+                                # error code should only be 4XX or 5XX for an error object
+                                description: the HTTP status code applicable to this problem in string
+                                type: string
+                                pattern: ^[4,5]\d\d$
+                            code:
+                                description: an application-specific error code
+                                type: string
+                            title:
+                                description: a short, human-readable summary of the problem that SHOULD NOT change from occurrence to occurrence of the problem
+                                type: string
+                            detail:
+                                description: a human-readable explanation specific to this occurrence of the problem
+        NUSID:
+            description: a linked NUSNET id
+            type: string
+            pattern: ^e\d{7}$
+        ID:
+            description: primary key of resource objects, unique within the scope of a certain resource
+            type: integer
+            # int64 corresponds to BIGINT in MySQL
+            format: int64
+        DateTime:
+            description: a specfic time at a specific date, defined by RFC3339 date-time
+            type: string
+            format: date-time
+        LocationOnline:
+            description: an object representing an online location
+            type: object
+            required:
+            -   type
+            -   platform
+            -   link
+            properties:
+                type:
+                    description: type of this location object, which is just `online`
+                    type: string
+                    enum:
+                    -   online
+                platform:
+                    description: the platform for online event to be held
+                    type: string
+                link:
+                    description: the URL or any information like room number linked to the platform and the room, if any
+                    type: string
+        LocationPhysical:
+            description: a physical location located in Singapore
+            required:
+            -   type
+            -   zip_code
+            -   address
+            properties:
+                type:
+                    description: type of this location object, which is just `physical`
+                    type: string
+                    enum:
+                    -   physical
+                zip_code:
+                    description: a Singapore 6-digit postal code represented in a string
+                    type: string
+                    pattern: ^[0-8]\d{5}$
+                address:
+                    description: an address with block number
+                    type: string
+                building:
+                    description: name of the building at this address
+                    type: string
+                unit:
+                    description: a unit number with two parts separated by a hyphen
+                    type: string
+                    format: ^[A-Z0-9]\d*-\d+[A-Z]*$
+        Secret:
+            description: a string in UUID pattern, used for authentication and authorization
+            type: string
+            pattern: ^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$
+    parameters:
+        PathID:
+            name: id
+            in: path
+            description: ID of the resource object to be used
+            required: true
+            schema:
+                $ref: '#/components/x-definitions/ID'
+        HeaderTokenID:
+            name: X-Token-ID
+            in: header
+            description: ID of the token used for authentication and authorization
+            required: true
+            schema:
+                $ref: '#/components/x-definitions/ID'
+        HeaderTokenSecret:
+            name: X-Token-Secret
+            in: header
+            description: Secret of the token used for authentication and authorization
+            required: true
+            schema:
+                $ref: '#/components/x-definitions/Secret'
+    examples:
+        LocationOnline1:
+            summary: example for an online location with URL
+            value:
+                type: online
+                platform: Telegram
+                link: https://t.me/joinchat/AAAAAE9B8u_something
+        LocationOnline2:
+            summary: example for an online location with custom information like room number
+            value:
+                type: online
+                platform: Telegram
+                link: https://t.me/joinchat/AAAAAE9B8u_something
+        LocationPhysical1:
+            summary: a physical location example with building name and without unit number
+            value:
+                type: physical
+                zip_code: 117561
+                address: 2 Sports Drive 1
+                building: University Sports Centre
+        LocationPhysical2:
+            summary: a HDB flat address example
+            value:
+                type: physical
+                zip_code: 120329
+                address: 329 Clementi Ave 2
+                unit: 10-13
+        TokenEmpty:
+            summary: empty token object
+            value:
+                data:
+                    type: token
+        TokenAuth:
+            summary: a new token with redirection URL to authenticate the user
+            value:
+                data:
+                    type: token
+                    id: 1
+                    attributes:
+                        secret: 65f60824-9e88-11ea-bb37-0242ac130002
+                        status: created
+                    links:
+                        auth: 'https://openid.nus.edu.sg/auth/index/?openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.realm=http%3A%2F%2Flocalhost%3A8080%2F&openid.return_to=http%3A%2F%2Flocalhost%3A8080%2Fcallback%2Fopenid&controller=server&action=index&module=default'
+        UserAllAttributes:
+            summary: user object with all attributes
+            value:
+                data:
+                    type: user
+                    id: 1
+                    attributes:
+                        nickname: Ailie
+                        nusid: e1234567
+                        email: e1234567@u.nus.edu
+                        fullname: Alicia Koh
+        UserPartialAttributes:
+            summary: user object with partial attributes
+            value:
+                data:
+                    type: user
+                    id: 1
+                    attributes:
+                        # when this is used in user.update, nickname of uid=1 is updated as Alice
+                        nickname: Alice
+        UserNew:
+            summary: new user object without id
+            value:
+                data:
+                    type: user
+                    attributes:
+                        nickname: Ailie
+                        nusid: e1234567
+                        email: e1234567@u.nus.edu
+                        fullname: Alicia Koh
+        Error401:
+            summary: 401 Unauthorized
+            value:
+                errors:
+                -
+                    status: '401'
+                    code: error.unauthorized
+                    title: authentication token is missing or invalid
+        # note that 401 is different from 403
+        # 401 means token is not sent in HTTP header or token sent is invalid
+        # 403 means token is valid but does not entitle the holder to perform such action
+        Error403:
+            summary: 403 Forbidden
+            value:
+                errors:
+                -
+                    status: '403'
+                    code: error.forbidden
+                    title: you are not authorized to access this resource in this way
+        Error404:
+            summary: 404 Not Found
+            value:
+                errors:
+                -
+                    status: '404'
+                    code: error.not_found
+                    title: requested or related resources cannot be found
+        Error500:
+            summary: 500 Internal Server Error
+            value:
+                errors:
+                -
+                    status: '500'
+                    code: error.internal
+                    title: something unexpected happened at the server side
