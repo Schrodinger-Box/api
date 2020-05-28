@@ -51,12 +51,11 @@ paths:
                                     $ref: '#/components/examples/Error500'
     /user:
         get:
-            summary: retrieve information of a specific user
-            operationId: user.get
+            summary: retrieve information of the token bearer
+            operationId: user.get_self
             tags:
             -   user
             parameters:
-            -   $ref: '#/components/parameters/PathID'
             -   $ref: '#/components/parameters/HeaderTokenID'
             -   $ref: '#/components/parameters/HeaderTokenSecret'
             responses:
@@ -72,10 +71,9 @@ paths:
                                     data:
                                         $ref: '#/components/schemas/User'
                             examples:
+                                # user.get_self will always obtain all information about the token bearer
                                 user:
                                     $ref: '#/components/examples/UserAllAttributes'
-                                userPartialAttributes:
-                                    $ref: '#/components/examples/UserPartialAttributes'
                 default:
                     description: unexpected error occured
                     content:
@@ -141,12 +139,55 @@ paths:
                                     $ref: '#/components/examples/Error403'
                                 error500:
                                     $ref: '#/components/examples/Error500'
+    /user/{id}:
+        get:
+            summary: retrieve information of a specific user
+            operationId: user.get
+            tags:
+            -   user
+            parameters:
+            -   $ref: '#/components/parameters/PathID'
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            responses:
+                '200':
+                    description: user object is successfully found
+                    content:
+                        'application/vnd.api+json':
+                            schema: 
+                                type: object
+                                required:
+                                -   data
+                                properties:
+                                    data:
+                                        $ref: '#/components/schemas/User'
+                            examples:
+                                user:
+                                    $ref: '#/components/examples/UserAllAttributes'
+                                userPartialAttributes:
+                                    $ref: '#/components/examples/UserPartialAttributes'
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
         patch:
             summary: update an user object
             operationId: user.update
             tags:
             -   user
             parameters:
+            -   $ref: '#/components/parameters/PathID'
             -   $ref: '#/components/parameters/HeaderTokenID'
             -   $ref: '#/components/parameters/HeaderTokenSecret'
             requestBody:
@@ -196,7 +237,7 @@ paths:
                                     $ref: '#/components/examples/Error404'
                                 error500:
                                     $ref: '#/components/examples/Error500'
-    /event:
+    /event/{id}:
         get:
             summary: retrieve information of a specific event
             operationId: event.get
