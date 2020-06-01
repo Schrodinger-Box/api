@@ -289,20 +289,26 @@ components:
                 id:
                     $ref: '#/components/x-definitions/ID'
                 attributes:
-                    type: object
-                    properties:
-                        secret:
-                            $ref: '#/components/x-definitions/Secret'
-                        status:
-                            description: status of the token
-                            type: string
-                            enum:
-                                - created
-                                - active
-                                - expired
-                                - destroyed
-                        nusid:
-                            $ref: '#/components/x-definitions/NUSID'
+                    allOf:
+                    -
+                        type: object
+                        required:
+                        -   secret
+                        -   status
+                        properties:
+                            secret:
+                                $ref: '#/components/x-definitions/Secret'
+                            status:
+                                description: status of the token
+                                type: string
+                                enum:
+                                -   created
+                                -   active
+                                -   expired
+                                -   destroyed
+                    -
+                        $ref: '#/components/x-definitions/IdentityFields'
+                        
                 links:
                     type: object
                     properties:
@@ -323,20 +329,17 @@ components:
                 id:
                     $ref: '#/components/x-definitions/ID'
                 attributes:
-                    type: object
-                    properties:
-                        nickname:
-                            description: a nickname defined by the user when it is first created
-                            type: string
-                        nusid:
-                            $ref: '#/components/x-definitions/NUSID'
-                        email:
-                            description: email of the user, whether returning it depends on user's privacy setting
-                            type: string
-                            format: email
-                        fullname:
-                            description: full name of the user, whether returning it depends on user's privacy setting
-                            type: string
+                    allOf:
+                    -
+                        type: object
+                        required:
+                        -   nickname
+                        properties:
+                            nickname:
+                                description: a nickname defined by the user when it is first created
+                                type: string
+                    -
+                        $ref: '#/components/x-definitions/IdentityFields'
         Event:
             type: object
             required:
@@ -352,6 +355,13 @@ components:
                     $ref: '#/components/x-definitions/ID'
                 attributes:
                     type: object
+                    required:
+                    -   title
+                    -   time_begin
+                    -   time_end
+                    -   organizer
+                    -   location
+                    -   type
                     properties:
                         title:
                             description: title of the event which will be showned at places like search results
@@ -360,12 +370,13 @@ components:
                             $ref: '#/components/x-definitions/DateTime'
                         time_end:
                             $ref: '#/components/x-definitions/DateTime'
+                        # this organizer should be an relationship object
                         organizer:
                             $ref: '#/components/x-definitions/NUSID'
                         location:
                             oneOf:
-                            -   $ref: '#/components/x-definitions/LocationOnline'
-                            -   $ref: '#/components/x-definitions/LocationPhysical'
+                            -   $ref: '#/components/x-definitions/OnlineLocation'
+                            -   $ref: '#/components/x-definitions/PhysicalLocation'
                         type:
                             description: type of this event
                             type: string       
@@ -412,7 +423,7 @@ components:
             description: a specfic time at a specific date, defined by RFC3339 date-time
             type: string
             format: date-time
-        LocationOnline:
+        OnlineLocation:
             description: an object representing an online location
             type: object
             required:
@@ -431,7 +442,7 @@ components:
                 link:
                     description: the URL or any information like room number linked to the platform and the room, if any
                     type: string
-        LocationPhysical:
+        PhysicalLocation:
             description: a physical location located in Singapore
             required:
             -   type
@@ -461,6 +472,21 @@ components:
             description: a string in UUID pattern, used for authentication and authorization
             type: string
             pattern: ^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$
+        Email:
+            description: a string in email format
+            type: string
+            format: email
+        IdentityFields:
+            description: fields containing identity information, shared by Token and User
+            type: object
+            properties:
+                nusid:
+                    $ref: '#/components/x-definitions/NUSID'
+                email:
+                    $ref: '#/components/x-definitions/Email'
+                fullname:
+                    description: full name obtained through OpenID protocol
+                    type: string
     parameters:
         PathID:
             name: id
@@ -525,7 +551,7 @@ components:
                         secret: 65f60824-9e88-11ea-bb37-0242ac130002
                         status: created
                     links:
-                        auth: 'https://openid.nus.edu.sg/auth/index/?openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.realm=http%3A%2F%2Flocalhost%3A8080%2F&openid.return_to=http%3A%2F%2Flocalhost%3A8080%2Fcallback%2Fopenid&controller=server&action=index&module=default'
+                        auth: 'https://openid.nus.edu.sg/server/?openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.realm=http%3A%2F%2Flocalhost%3A8080%2F&openid.return_to=http%3A%2F%2Flocalhost%3A8080%2Fcallback%2Fopenid&openid.sreg.optional=&openid.sreg.required=email%2Cfullname'
         UserAllAttributes:
             summary: user object with all attributes
             value:
