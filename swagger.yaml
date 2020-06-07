@@ -334,10 +334,18 @@ components:
                         type: object
                         required:
                         -   nickname
+                        -   type
                         properties:
                             nickname:
                                 description: a nickname defined by the user when it is first created
                                 type: string
+                            type:    
+                                description: type of this user object
+                                type: string
+                                enum:
+                                -   individual    # Individual student
+                                -   org_student   # CCAs, interest groups
+                                -   org_official  # offices, libraries, faculties, NUSSUs
                     -
                         $ref: '#/components/x-definitions/IdentityFields'
         Event:
@@ -563,6 +571,7 @@ components:
                         nusid: e1234567
                         email: e1234567@u.nus.edu
                         fullname: Alicia Koh
+                        type: individual
         UserPartialAttributes:
             summary: user object with partial attributes
             value:
@@ -572,6 +581,7 @@ components:
                     attributes:
                         # when this is used in user.update, nickname of uid=1 is updated as Alice
                         nickname: Alice
+                        type: individual
         UserNew:
             summary: new user object without id
             value:
