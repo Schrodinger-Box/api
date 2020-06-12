@@ -133,10 +133,67 @@ paths:
                             schema:
                                 $ref: '#/components/x-definitions/Errors'
                             examples:
+                                error400:
+                                    $ref: '#/components/examples/Error400'
                                 error401:
                                     $ref: '#/components/examples/Error401'
                                 error403:
                                     $ref: '#/components/examples/Error403'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+        patch:
+            summary: update an user object with reference ID provided in request body
+            operationId: user.update
+            tags:
+            -   user
+            parameters:
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            requestBody:
+                required: true
+                content:
+                    'application/vnd.api+json':
+                        schema: 
+                            type: object
+                            required:
+                            -   data
+                            properties:
+                                data:
+                                    $ref: '#/components/schemas/User'
+                        examples:
+                            # nusid cannot be updated - hence full update is not applicable here
+                            user:
+                                $ref: '#/components/examples/UserUpdate'
+            responses:
+                '200':
+                    description: user object is updated successfully
+                    content:
+                        'application/vnd.api+json':
+                            schema: 
+                                type: object
+                                required:
+                                -   data
+                                properties:
+                                    data:
+                                        $ref: '#/components/schemas/User'
+                            examples:
+                                user:
+                                    $ref: '#/components/examples/UserAllAttributes'
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error400:
+                                    $ref: '#/components/examples/Error400'
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
                                 error500:
                                     $ref: '#/components/examples/Error500'
     /user/{id}:
@@ -181,13 +238,13 @@ paths:
                                     $ref: '#/components/examples/Error404'
                                 error500:
                                     $ref: '#/components/examples/Error500'
-        patch:
-            summary: update an user object
-            operationId: user.update
+    /event:
+        post:
+            summary: create a new event
+            operationId: event.create
             tags:
-            -   user
+            -   event
             parameters:
-            -   $ref: '#/components/parameters/PathID'
             -   $ref: '#/components/parameters/HeaderTokenID'
             -   $ref: '#/components/parameters/HeaderTokenSecret'
             requestBody:
@@ -200,28 +257,31 @@ paths:
                             -   data
                             properties:
                                 data:
-                                    $ref: '#/components/schemas/User'
+                                    $ref: '#/components/schemas/Event'
                         examples:
-                            # nusid cannot be updated - hence full update is not applicable here
-                            user:
-                                $ref: '#/components/examples/UserPartialAttributes'
+                            # organizer field should not be included
+                            event:
+                                $ref: '#/components/examples/EventNew'
             responses:
                 '201':
-                    description: user object is updated with attributes provided by BOTH the client and the server
+                    description: event is successfully created
                     content:
                         'application/vnd.api+json':
                             schema: 
                                 type: object
                                 required:
                                 -   data
+                                -   included
                                 properties:
                                     data:
-                                        $ref: '#/components/schemas/User'
+                                        $ref: '#/components/schemas/Event'
+                                    included:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/User'
                             examples:
-                                user:
-                                    $ref: '#/components/examples/UserAllAttributes'
-                '204':
-                    description: user object is updated with ONLY attributes provided by the client
+                                event:
+                                    $ref: '#/components/examples/EventAllAttributes'
                 default:
                     description: unexpected error occured
                     content:
@@ -229,12 +289,12 @@ paths:
                             schema:
                                 $ref: '#/components/x-definitions/Errors'
                             examples:
+                                error400:
+                                    $ref: '#/components/examples/Error400'
                                 error401:
                                     $ref: '#/components/examples/Error401'
                                 error403:
                                     $ref: '#/components/examples/Error403'
-                                error404:
-                                    $ref: '#/components/examples/Error404'
                                 error500:
                                     $ref: '#/components/examples/Error500'
     /event/{id}:
@@ -259,6 +319,13 @@ paths:
                                 properties:
                                     data:
                                         $ref: '#/components/schemas/Event'
+                                    included:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/User'
+                            examples:
+                                event:
+                                    $ref: '#/components/examples/EventAllAttributes'
                 default:
                     description: unexpected error occured
                     content:
@@ -308,6 +375,8 @@ components:
                                 -   destroyed
                     -
                         $ref: '#/components/x-definitions/IdentityFields'
+                    -
+                        $ref: '#/components/x-definitions/TimeFields'
                         
                 links:
                     type: object
@@ -348,6 +417,10 @@ components:
                                 -   org_official  # offices, libraries, faculties, NUSSUs
                     -
                         $ref: '#/components/x-definitions/IdentityFields'
+                    -
+                        $ref: '#/components/x-definitions/TimeFields'
+                links:
+                    $ref: '#/components/x-definitions/SelfLink'
         Event:
             type: object
             required:
@@ -362,32 +435,52 @@ components:
                 id:
                     $ref: '#/components/x-definitions/ID'
                 attributes:
+                    allOf:
+                    -
+                        type: object
+                        required:
+                        -   title
+                        -   time_begin
+                        -   time_end
+                        -   location
+                        -   type
+                        properties:
+                            title:
+                                description: title of the event which will be showned at places like search results
+                                type: string
+                            time_begin:
+                                $ref: '#/components/x-definitions/DateTime'
+                            time_end:
+                                $ref: '#/components/x-definitions/DateTime'
+                            location:
+                                oneOf:
+                                -   $ref: '#/components/x-definitions/OnlineLocation'
+                                -   $ref: '#/components/x-definitions/PhysicalLocation'
+                            type:
+                                description: type of this event
+                                type: string
+                    -
+                        $ref: '#/components/x-definitions/TimeFields'
+                relationships:
                     type: object
                     required:
-                    -   title
-                    -   time_begin
-                    -   time_end
                     -   organizer
-                    -   location
-                    -   type
                     properties:
-                        title:
-                            description: title of the event which will be showned at places like search results
-                            type: string
-                        time_begin:
-                            $ref: '#/components/x-definitions/DateTime'
-                        time_end:
-                            $ref: '#/components/x-definitions/DateTime'
-                        # this organizer should be an relationship object
                         organizer:
-                            $ref: '#/components/x-definitions/NUSID'
-                        location:
-                            oneOf:
-                            -   $ref: '#/components/x-definitions/OnlineLocation'
-                            -   $ref: '#/components/x-definitions/PhysicalLocation'
-                        type:
-                            description: type of this event
-                            type: string       
+                            allOf:
+                            -   
+                                $ref: '#/components/x-definitions/Relationship'
+                            -
+                                type: object
+                                properties:
+                                    data:
+                                        type: object
+                                        properties:
+                                            type:
+                                                enum:
+                                                -   organizer
+                links:
+                    $ref: '#/components/x-definitions/SelfLink'
     # definitions of data types
     x-definitions:
         Errors:
@@ -424,11 +517,11 @@ components:
             pattern: ^e\d{7}$
         ID:
             description: primary key of resource objects, unique within the scope of a certain resource
-            type: integer
-            # int64 corresponds to BIGINT in MySQL
-            format: int64
+            # take special note that although it is stored as integer in DB, it is a string in JSON request/response
+            type: string
+            format: ^\d+$
         DateTime:
-            description: a specfic time at a specific date, defined by RFC3339 date-time
+            description: a specfic time at a specific date, defined by RFC3339 (ISO8601) date-time
             type: string
             format: date-time
         OnlineLocation:
@@ -495,6 +588,51 @@ components:
                 fullname:
                     description: full name obtained through OpenID protocol
                     type: string
+        TimeFields:
+            description: fields containing time of the resource being created and updated
+            type: object
+            properties:
+                created_at:
+                    $ref: '#/components/x-definitions/DateTime'
+                updated_at:
+                    $ref: '#/components/x-definitions/DateTime'
+        SelfLink:
+            description: a link pointing to the resource itself
+            type: object
+            required:
+            -   self
+            properties:
+                self:
+                    type: string
+        RelatedLink:
+            description: a link pointing to the related resource
+            type: object
+            required:
+            -   related
+            properties:
+                related:
+                    type: string
+        Relationship:
+            description: a relationship object, containing information of related resource
+            type: object
+            required:
+            -   data
+            -   links
+            properties:
+                data:
+                    type: object
+                    required:
+                    -   type
+                    -   id
+                    properties:
+                        type:
+                            description: type of this relationship
+                            type: string
+                        id:
+                            description: unique ID of the related resource as a string
+                            type: string
+                links:
+                    $ref: '#/components/x-definitions/RelatedLink'
     parameters:
         PathID:
             name: id
@@ -523,25 +661,25 @@ components:
             value:
                 type: online
                 platform: Telegram
-                link: https://t.me/joinchat/AAAAAE9B8u_something
+                #link: https://t.me/joinchat/AAAAAE9B8u_something
         LocationOnline2:
             summary: example for an online location with custom information like room number
             value:
                 type: online
                 platform: Telegram
-                link: https://t.me/joinchat/AAAAAE9B8u_something
+                #link: https://t.me/joinchat/AAAAAE9B8u_something
         LocationPhysical1:
             summary: a physical location example with building name and without unit number
             value:
                 type: physical
-                zip_code: 117561
+                zip_code: '117561'
                 address: 2 Sports Drive 1
                 building: University Sports Centre
         LocationPhysical2:
             summary: a HDB flat address example
             value:
                 type: physical
-                zip_code: 120329
+                zip_code: '117561'
                 address: 329 Clementi Ave 2
                 unit: 10-13
         TokenEmpty:
@@ -554,10 +692,12 @@ components:
             value:
                 data:
                     type: token
-                    id: 1
+                    id: '1'
                     attributes:
                         secret: 65f60824-9e88-11ea-bb37-0242ac130002
                         status: created
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
                     links:
                         auth: 'https://openid.nus.edu.sg/server/?openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.realm=http%3A%2F%2Flocalhost%3A8080%2F&openid.return_to=http%3A%2F%2Flocalhost%3A8080%2Fcallback%2Fopenid&openid.sreg.optional=&openid.sreg.required=email%2Cfullname'
         UserAllAttributes:
@@ -565,33 +705,110 @@ components:
             value:
                 data:
                     type: user
-                    id: 1
+                    id: '1'
                     attributes:
                         nickname: Ailie
                         nusid: e1234567
                         email: e1234567@u.nus.edu
                         fullname: Alicia Koh
                         type: individual
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    links:
+                        self: 'http://127.0.0.1:8080/api/user/1'
         UserPartialAttributes:
-            summary: user object with partial attributes
+            summary: user object with partial attributes hidden due to privacy settings
             value:
                 data:
                     type: user
-                    id: 1
+                    id: '1'
                     attributes:
-                        # when this is used in user.update, nickname of uid=1 is updated as Alice
-                        nickname: Alice
+                        nickname: Allie
                         type: individual
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    links:
+                        self: 'http://127.0.0.1:8080/api/user/1'
+        UserUpdate:
+            summary: user object sent to update server's record
+            value:
+                data:
+                    type: user
+                    id: '1'
+                    attributes:
+                        # currently we only allow nickname to be updated
+                        nickname: Allie
+                
         UserNew:
-            summary: new user object without id
+            summary: new user object with only nickname and type
             value:
                 data:
                     type: user
                     attributes:
                         nickname: Ailie
-                        nusid: e1234567
-                        email: e1234567@u.nus.edu
-                        fullname: Alicia Koh
+                        type: individual
+        EventAllAttributes:
+            summary: event object with all attributes
+            value:
+                data:
+                    type: event
+                    id: '1'
+                    attributes:
+                        title: Interfaculty Badminton Competition
+                        time_begin: '2020-06-30T06:00:00Z'
+                        time_end: '2020-06-30T10:00:00Z'
+                        location:
+                            type: physical
+                            zip_code: '117561'
+                            address: 2 Sports Drive 1
+                            building: University Sports Centre
+                        type: sports
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    relationships:
+                        organizer:
+                            data:
+                                type: user
+                                id: '1'
+                            links:
+                                related: 'http://127.0.0.1:8080/api/user/1'
+                    links:
+                        self: 'http://127.0.0.1:8080/api/event/1'
+                related:
+                -
+                    # content of this should be the exactly same content as user.get(id)
+                    type: user
+                    id: '1'
+                    attributes:
+                        nickname: Allie
+                        type: individual
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    links:
+                        self: 'http://127.0.0.1:8080/api/user/1'
+        EventNew:
+            summary: new event object with partial attributes
+            value:
+                data:
+                    type: event
+                    attributes:
+                        title: Interfaculty Badminton Competition
+                        time_begin: '2020-06-30T06:00:00Z'
+                        time_end: '2020-06-30T10:00:00Z'
+                        location:
+                            type: physical
+                            zip_code: '117561'
+                            address: 2 Sports Drive 1
+                            building: University Sports Centre
+                        type: sports
+        Error400:
+            summary: 400 Bad Request
+            value:
+                errors:
+                -
+                    status: '400'
+                    code: error.bad_request
+                    title: errors occurred when processing request
         Error401:
             summary: 401 Unauthorized
             value:
