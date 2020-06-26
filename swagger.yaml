@@ -49,18 +49,17 @@ paths:
                             examples:
                                 error500:
                                     $ref: '#/components/examples/Error500'
-    /user:
         get:
-            summary: retrieve information of the token bearer
-            operationId: user.get_self
+            summary: retrieve a token
+            operationId: token.get
             tags:
-            -   user
+            -   authentication
             parameters:
             -   $ref: '#/components/parameters/HeaderTokenID'
             -   $ref: '#/components/parameters/HeaderTokenSecret'
             responses:
                 '200':
-                    description: user object is successfully found
+                    description: token found and returned
                     content:
                         'application/vnd.api+json':
                             schema: 
@@ -69,11 +68,10 @@ paths:
                                 -   data
                                 properties:
                                     data:
-                                        $ref: '#/components/schemas/User'
+                                        $ref: '#/components/schemas/Token'
                             examples:
-                                # user.get_self will always obtain all information about the token bearer
-                                user:
-                                    $ref: '#/components/examples/UserAllAttributes'
+                                token:
+                                    $ref: '#/components/examples/TokenAuth'
                 default:
                     description: unexpected error occured
                     content:
@@ -81,14 +79,9 @@ paths:
                             schema:
                                 $ref: '#/components/x-definitions/Errors'
                             examples:
-                                error401:
-                                    $ref: '#/components/examples/Error401'
-                                error403:
-                                    $ref: '#/components/examples/Error403'
-                                error404:
-                                    $ref: '#/components/examples/Error404'
                                 error500:
                                     $ref: '#/components/examples/Error500'
+    /user:
         post:
             summary: create a new user linked to the NUSID provided by the token
             operationId: user.create
@@ -176,9 +169,18 @@ paths:
                                 properties:
                                     data:
                                         $ref: '#/components/schemas/User'
+                                    included:
+                                        type: array
+                                        items:
+                                            anyOf:
+                                            -   $ref: '#/components/schemas/EventSignup'
+                                            -   $ref: '#/components/schemas/Event'
+                                            -   $ref: '#/components/schemas/User'
                             examples:
                                 user:
                                     $ref: '#/components/examples/UserAllAttributes'
+                                userWithSignups:
+                                    $ref: '#/components/examples/UserWithSignups'
                 default:
                     description: unexpected error occured
                     content:
@@ -188,6 +190,54 @@ paths:
                             examples:
                                 error400:
                                     $ref: '#/components/examples/Error400'
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+        get:
+            summary: retrieve information of the token bearer
+            operationId: user.get_self
+            tags:
+            -   user
+            parameters:
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            responses:
+                '200':
+                    description: user object is successfully found
+                    content:
+                        'application/vnd.api+json':
+                            schema: 
+                                type: object
+                                required:
+                                -   data
+                                properties:
+                                    data:
+                                        $ref: '#/components/schemas/User'
+                                    included:
+                                        type: array
+                                        items:
+                                            anyOf:
+                                            -   $ref: '#/components/schemas/EventSignup'
+                                            -   $ref: '#/components/schemas/Event'
+                                            -   $ref: '#/components/schemas/User'
+                            examples:
+                                # user.get_self will always obtain all information about the token bearer
+                                user:
+                                    $ref: '#/components/examples/UserAllAttributes'
+                                userWithSignups:
+                                    $ref: '#/components/examples/UserWithSignups'
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
                                 error401:
                                     $ref: '#/components/examples/Error401'
                                 error403:
@@ -218,11 +268,20 @@ paths:
                                 properties:
                                     data:
                                         $ref: '#/components/schemas/User'
+                                    included:
+                                        type: array
+                                        items:
+                                            anyOf:
+                                            -   $ref: '#/components/schemas/EventSignup'
+                                            -   $ref: '#/components/schemas/Event'
+                                            -   $ref: '#/components/schemas/User'
                             examples:
                                 user:
                                     $ref: '#/components/examples/UserAllAttributes'
                                 userPartialAttributes:
                                     $ref: '#/components/examples/UserPartialAttributes'
+                                userWithSignups:
+                                    $ref: '#/components/examples/UserWithSignups'
                 default:
                     description: unexpected error occured
                     content:
@@ -322,10 +381,104 @@ paths:
                                     included:
                                         type: array
                                         items:
-                                            $ref: '#/components/schemas/User'
+                                            anyOf:
+                                            -   $ref: '#/components/schemas/User'
+                                            # event may have related signup records
+                                            -   $ref: '#/components/schemas/EventSignup'
                             examples:
                                 event:
                                     $ref: '#/components/examples/EventAllAttributes'
+                                eventWithSignups:
+                                    $ref: '#/components/examples/EventWithSignups'
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+    /event/signup:
+        post:
+            summary: create a new signup record
+            operationId: event.signup.create
+            tags:
+            -   event
+            parameters:
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            requestBody:
+                required: true
+                content:
+                    'application/vnd.api+json':
+                        schema: 
+                            type: object
+                            required:
+                            -   data
+                            properties:
+                                data:
+                                    $ref: '#/components/schemas/EventSignup'
+                        examples:
+                            # organizer field should not be included
+                            event:
+                                $ref: '#/components/examples/EventSignupNew'
+            responses:
+                '201':
+                    description: signup record is successfully created
+                    content:
+                        'application/vnd.api+json':
+                            schema: 
+                                type: object
+                                required:
+                                -   data
+                                -   included
+                                properties:
+                                    data:
+                                        $ref: '#/components/schemas/Event'
+                                    included:
+                                        type: array
+                                        items:
+                                            anyOf:
+                                            -   $ref: '#/components/schemas/User'
+                                            -   $ref: '#/components/schemas/Event'
+                            examples:
+                                eventSignup:
+                                    $ref: '#/components/examples/EventSignupAllAttributes'
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+    /event/signup/{id}:
+        delete:
+            summary: delete a signup record
+            operationId: event.signup.delete
+            tags:
+            -   event
+            parameters:
+            -   $ref: '#/components/parameters/PathID'
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            responses:
+                '204':
+                    description: signup record is successfully deleted
                 default:
                     description: unexpected error occured
                     content:
@@ -388,7 +541,6 @@ components:
             type: object
             required:
             -   type
-            -   attributes
             properties:
                 type:
                     description: type of User object, which is just `user`
@@ -419,13 +571,14 @@ components:
                         $ref: '#/components/x-definitions/IdentityFields'
                     -
                         $ref: '#/components/x-definitions/TimeFields'
+                relationships:
+                    $ref: '#/components/x-definitions/EventSignupsRelationship'
                 links:
                     $ref: '#/components/x-definitions/SelfLink'
         Event:
             type: object
             required:
             -   type
-            -   attributes
             properties:
                 type:
                     description: type of Event object, which is just `event`
@@ -462,25 +615,29 @@ components:
                     -
                         $ref: '#/components/x-definitions/TimeFields'
                 relationships:
-                    type: object
-                    required:
-                    -   organizer
-                    properties:
-                        organizer:
-                            allOf:
-                            -   
-                                $ref: '#/components/x-definitions/Relationship'
-                            -
-                                type: object
-                                properties:
-                                    data:
-                                        type: object
-                                        properties:
-                                            type:
-                                                enum:
-                                                -   organizer
+                    allOf:
+                    -   $ref: '#/components/x-definitions/OrganizerRelationship'
+                    -   $ref: '#/components/x-definitions/EventSignupsRelationship'
                 links:
                     $ref: '#/components/x-definitions/SelfLink'
+        EventSignup:
+            description: a signup relation between a user and an event
+            type: object
+            required:
+            -   type
+            properties:
+                type:
+                    description: type of Event object, which is just `eventSignup`
+                    type: string
+                    enum:
+                    -   eventSignup
+                attributes:
+                    $ref: '#/components/x-definitions/TimeFields'
+                relationships:
+                    allOf:
+                    -   $ref: '#/components/x-definitions/EventRelationship'
+                    -   $ref: '#/components/x-definitions/UserRelationship'
+                        
     # definitions of data types
     x-definitions:
         Errors:
@@ -612,27 +769,108 @@ components:
             properties:
                 related:
                     type: string
+        # relationship base definition and extended definitions (with type field fixed)
+        RelationshipData:
+            type: object
+            required:
+            -   type
+            -   id
+            properties:
+                type:
+                    description: type of this relationship
+                    type: string
+                id:
+                    description: unique ID of the related resource as a string
+                    type: string
         Relationship:
-            description: a relationship object, containing information of related resource
+            description: a one-to-one relationship object, containing information of related resource
             type: object
             required:
             -   data
-            -   links
             properties:
                 data:
-                    type: object
-                    required:
-                    -   type
-                    -   id
-                    properties:
-                        type:
-                            description: type of this relationship
-                            type: string
-                        id:
-                            description: unique ID of the related resource as a string
-                            type: string
+                    $ref: '#/components/x-definitions/RelationshipData'
                 links:
                     $ref: '#/components/x-definitions/RelatedLink'
+        Relationships:
+            description: a one-to-many relationship object
+            type: object
+            required:
+            -   data
+            properties:
+                data:
+                    type: array
+                    items:
+                        $ref: '#/components/x-definitions/RelationshipData'
+        OrganizerRelationship:
+            type: object
+            # set to 'required' since all usages of this relationship marks it necessary to be present
+            required:
+            -   organizer
+            properties:
+                organizer:
+                    allOf:
+                    -   
+                        $ref: '#/components/x-definitions/Relationship'
+                    -
+                        type: object
+                        properties:
+                            data:
+                                type: object
+                                properties:
+                                    type:
+                                        enum:
+                                        -   organizer
+        EventRelationship:
+            type: object
+            properties:
+                event:
+                    allOf:
+                    -   
+                        $ref: '#/components/x-definitions/Relationship'
+                    -
+                        type: object
+                        properties:
+                            data:
+                                type: object
+                                properties:
+                                    type:
+                                        enum:
+                                        -   event
+        UserRelationship:
+            type: object
+            properties:
+                user:
+                    allOf:
+                    -   
+                        $ref: '#/components/x-definitions/Relationship'
+                    -
+                        type: object
+                        properties:
+                            data:
+                                type: object
+                                properties:
+                                    type:
+                                        enum:
+                                        -   user
+        EventSignupsRelationship:
+            type: object
+            properties:
+                event_signups:
+                    allOf:
+                    -   
+                        $ref: '#/components/x-definitions/Relationships'
+                    -
+                        type: object
+                        properties:
+                            data:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        type:
+                                            enum:
+                                            -   event_signups
     parameters:
         PathID:
             name: id
@@ -661,13 +899,13 @@ components:
             value:
                 type: online
                 platform: Telegram
-                #link: https://t.me/joinchat/AAAAAE9B8u_something
+                link: https://t.me/joinchat/AAAAAE9B8u_something
         LocationOnline2:
             summary: example for an online location with custom information like room number
             value:
                 type: online
-                platform: Telegram
-                #link: https://t.me/joinchat/AAAAAE9B8u_something
+                platform: EVE Online
+                link: 'Channel: ABCXYZ'
         LocationPhysical1:
             summary: a physical location example with building name and without unit number
             value:
@@ -700,6 +938,17 @@ components:
                         updated_at: '2020-06-08T09:04:45Z'
                     links:
                         auth: 'https://openid.nus.edu.sg/server/?openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.realm=http%3A%2F%2Flocalhost%3A8080%2F&openid.return_to=http%3A%2F%2Flocalhost%3A8080%2Fcallback%2Fopenid&openid.sreg.optional=&openid.sreg.required=email%2Cfullname'
+        TokenAllAttributes:
+            summary: an active token with all information
+            value:
+                data:
+                    type: token
+                    id: '1'
+                    attributes:
+                        secret: 65f60824-9e88-11ea-bb37-0242ac130002
+                        status: created
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
         UserAllAttributes:
             summary: user object with all attributes
             value:
@@ -716,6 +965,77 @@ components:
                         updated_at: '2020-06-08T09:04:45Z'
                     links:
                         self: 'http://127.0.0.1:8080/api/user/1'
+        UserWithSignups:
+            summary: user object with an event signup record
+            value:
+                data:
+                    type: user
+                    id: '1'
+                    attributes:
+                        nickname: Ailie
+                        nusid: e1234567
+                        email: e1234567@u.nus.edu
+                        fullname: Alicia Koh
+                        type: individual
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    relationships:
+                        event_signups:
+                        -
+                            data:
+                                type: event_signup
+                                id: 1
+                    links:
+                        self: 'http://127.0.0.1:8080/api/user/1'
+                included:
+                -
+                    type: event_signup
+                    id: '1'
+                    attributes:
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    relationships:
+                        # for user object, event signup record only side-loads events information
+                        user:
+                            data:
+                                type: event
+                                id: '1'
+                -
+                    type: event
+                    id: '1'
+                    attributes:
+                        title: Interfaculty Badminton Competition
+                        time_begin: '2020-06-30T06:00:00Z'
+                        time_end: '2020-06-30T10:00:00Z'
+                        location:
+                            type: physical
+                            zip_code: '117561'
+                            address: 2 Sports Drive 1
+                            building: University Sports Centre
+                        type: sports
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    relationships:
+                        organizer:
+                            data:
+                                type: user
+                                id: '2'
+                            links:
+                                related: 'http://127.0.0.1:8080/api/user/1'
+                    links:
+                        self: 'http://127.0.0.1:8080/api/event/1'
+                -
+                    # event organizer's data will also be side-loaded for convenience
+                    # content of this should be the exactly same content as user.get(id)
+                    type: user
+                    id: '2'
+                    attributes:
+                        nickname: Demo Organizer
+                        type: individual
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    links:
+                        self: 'http://127.0.0.1:8080/api/user/2'
         UserPartialAttributes:
             summary: user object with partial attributes hidden due to privacy settings
             value:
@@ -774,7 +1094,7 @@ components:
                                 related: 'http://127.0.0.1:8080/api/user/1'
                     links:
                         self: 'http://127.0.0.1:8080/api/event/1'
-                related:
+                included:
                 -
                     # content of this should be the exactly same content as user.get(id)
                     type: user
@@ -786,6 +1106,73 @@ components:
                         updated_at: '2020-06-08T09:04:45Z'
                     links:
                         self: 'http://127.0.0.1:8080/api/user/1'
+        EventWithSignups:
+            summary: event object with a related signup record
+            value:
+                data:
+                    type: event
+                    id: '1'
+                    attributes:
+                        title: Interfaculty Badminton Competition
+                        time_begin: '2020-06-30T06:00:00Z'
+                        time_end: '2020-06-30T10:00:00Z'
+                        location:
+                            type: physical
+                            zip_code: '117561'
+                            address: 2 Sports Drive 1
+                            building: University Sports Centre
+                        type: sports
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    relationships:
+                        organizer:
+                            data:
+                                type: user
+                                id: '1'
+                            links:
+                                related: 'http://127.0.0.1:8080/api/user/1'
+                        event_signups:
+                        -
+                            data:
+                                type: event_signup
+                                id: '1'
+                    links:
+                        self: 'http://127.0.0.1:8080/api/event/1'
+                included:
+                -
+                    # content of this should be the exactly same content as user.get(id)
+                    type: user
+                    id: '1'
+                    attributes:
+                        nickname: Allie
+                        type: individual
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    links:
+                        self: 'http://127.0.0.1:8080/api/user/1'
+                -
+                    # content of this should be the exactly same content as user.get(id)
+                    type: user
+                    id: '2'
+                    attributes:
+                        nickname: Demo Participant
+                        type: individual
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    links:
+                        self: 'http://127.0.0.1:8080/api/user/2'
+                -
+                    type: event_signup
+                    id: '1'
+                    attributes:
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    relationships:
+                        # for event object, event signup record only side-loads participants information
+                        user:
+                            data:
+                                type: user
+                                id: '2'
         EventNew:
             summary: new event object with partial attributes
             value:
@@ -801,6 +1188,63 @@ components:
                             address: 2 Sports Drive 1
                             building: University Sports Centre
                         type: sports
+        EventSignupNew:
+            summary: object used to create a new signup record
+            value:
+                data:
+                    type: eventSignup
+                    relationships:
+                        event:
+                            data:
+                                type: event
+                                id: '1'
+        EventSignupAllAttributes:
+            summary: a complete eventSignup object with all attributes
+            value:
+                data:
+                    id: 1
+                    type: eventSignup
+                    attributes:
+                        created_at: '2020-06-19T12:54:00Z'
+                        updated_at: '2020-06-19T12:54:00Z'
+                    relationships:
+                        event:
+                            data:
+                                type: event
+                                id: '1'
+                        user:
+                            data:
+                                type: event
+                                id: '1'
+                included:
+                -
+                    type: user
+                    id: '1'
+                    attributes:
+                        nickname: Allie
+                        type: individual
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    links:
+                        self: 'http://127.0.0.1:8080/api/user/1'
+                -
+                    # note: relationships will not be listed here since Event.Organizer will not be loaded
+                    type: event
+                    id: '1'
+                    attributes:
+                        title: Interfaculty Badminton Competition
+                        time_begin: '2020-06-30T06:00:00Z'
+                        time_end: '2020-06-30T10:00:00Z'
+                        location:
+                            type: physical
+                            zip_code: '117561'
+                            address: 2 Sports Drive 1
+                            building: University Sports Centre
+                        type: sports
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    links:
+                        self: 'http://127.0.0.1:8080/api/event/1'
         Error400:
             summary: 400 Bad Request
             value:
