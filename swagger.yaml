@@ -3,8 +3,36 @@ info:
     title: Schrodinger's Box
     version: 1.0.0
 servers:
--   url: 'http://localhost:8080/api'
+-   url: 'http://schrodinger-box-test.ixnet.work:9173/api'
 paths:
+    /uptime:
+        get:
+            summary: uptime of the service
+            operationId: uptime
+            tags:
+            -   miscellaneous
+            responses:
+                '200':
+                    description: uptime generated
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                type: object
+                                required:
+                                -   meta
+                                properties:
+                                    meta:
+                                        type: object
+                                        required:
+                                        -   uptime
+                                        properties:
+                                            uptime:
+                                                type: string
+                            examples:
+                                uptime:
+                                    value:
+                                        meta:
+                                            uptime: "3.07571916s"
     /token:
         post:
             summary: create a token with a redirection URL to authenticate user
@@ -71,7 +99,7 @@ paths:
                                         $ref: '#/components/schemas/Token'
                             examples:
                                 token:
-                                    $ref: '#/components/examples/TokenAuth'
+                                    $ref: '#/components/examples/TokenAllAttributes'
                 default:
                     description: unexpected error occured
                     content:
@@ -79,6 +107,8 @@ paths:
                             schema:
                                 $ref: '#/components/x-definitions/Errors'
                             examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
                                 error500:
                                     $ref: '#/components/examples/Error500'
     /user:
@@ -231,6 +261,32 @@ paths:
                                     $ref: '#/components/examples/UserAllAttributes'
                                 userWithSignups:
                                     $ref: '#/components/examples/UserWithSignups'
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+        delete:
+            summary: terminate a user's own account
+            operationId: user.delete
+            tags:
+            -   user
+            parameters:
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            responses:
+                '204':
+                    description: user is successfully deleted
                 default:
                     description: unexpected error occured
                     content:
@@ -405,7 +461,34 @@ paths:
                                     $ref: '#/components/examples/Error404'
                                 error500:
                                     $ref: '#/components/examples/Error500'
-    /event/signup:
+        delete:
+            summary: delete an event
+            operationId: event.delete
+            tags:
+            -   event
+            parameters:
+            -   $ref: '#/components/parameters/PathID'
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            responses:
+                '204':
+                    description: event is successfully deleted
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+    /event_signup:
         post:
             summary: create a new signup record
             operationId: event.signup.create
@@ -441,7 +524,7 @@ paths:
                                 -   included
                                 properties:
                                     data:
-                                        $ref: '#/components/schemas/Event'
+                                        $ref: '#/components/schemas/EventSignup'
                                     included:
                                         type: array
                                         items:
@@ -449,7 +532,7 @@ paths:
                                             -   $ref: '#/components/schemas/User'
                                             -   $ref: '#/components/schemas/Event'
                             examples:
-                                eventSignup:
+                                event_signup:
                                     $ref: '#/components/examples/EventSignupAllAttributes'
                 default:
                     description: unexpected error occured
@@ -466,7 +549,7 @@ paths:
                                     $ref: '#/components/examples/Error404'
                                 error500:
                                     $ref: '#/components/examples/Error500'
-    /event/signup/{id}:
+    /event_signup/{id}:
         delete:
             summary: delete a signup record
             operationId: event.signup.delete
@@ -479,6 +562,269 @@ paths:
             responses:
                 '204':
                     description: signup record is successfully deleted
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+    /events:
+        get:
+            summary: obtain a list of events
+            operationId: events.get
+            tags:
+            -   event
+            parameters:
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            -
+                name: sort
+                description: Order of results presented, accepts properties of an event object (e.g. id). Prefix properties with - means order in decending way (e.g. -id)
+                in: query
+                schema:
+                    type: string
+            -
+                name: page
+                description: Index of the page requested, starting from 0 as the first page
+                in: query
+                schema:
+                    type: integer
+            responses:
+                '200':
+                    description: Successfully obtained a list of events
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/Event'
+                                    included:
+                                        type: array
+                                        items:
+                                            anyOf:
+                                            -   $ref: '#/components/schemas/User'
+                                            -   $ref: '#/components/schemas/EventSignup'
+                                    links:
+                                        type: object
+                                        properties:
+                                            first:
+                                                description: URL to the first page of events in the given order and page size
+                                                type: string
+                                            last:
+                                                description: URL to the last page of events in the given order and page size
+                                                type: string
+                                            next:
+                                                description: URL to the next page of events in the given order and page size, return null if already at last page
+                                                type: string
+                                            prev:
+                                                description: URL to the first page of events in the given order and page size, return null if already at first page
+                                                type: string
+                                    meta:
+                                        type: object
+                                        properties:
+                                            total_pages:
+                                                description: The total number of pages available for query
+                                                type: integer
+                                            current_page:
+                                                description: Value is the same as the page parameter
+                                                type: integer
+                                            max_page_size:
+                                                description: The MAXIMUM number of resource objects in one response which is managed at server-side
+                                                type: integer
+                                            this_page_size:
+                                                description: The number of resource objects in the data array in this response, can be different from max_page_size if it is the last page
+                                                type: integer
+                                            
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+    /file:
+        post:
+            summary: create a new file record
+            operationId: file.create
+            tags:
+            -   file
+            parameters:
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            requestBody:
+                required: true
+                content:
+                    'application/vnd.api+json':
+                        schema: 
+                            type: object
+                            required:
+                            -   data
+                            properties:
+                                data:
+                                    $ref: '#/components/schemas/File'
+                        examples:
+                            # organizer field should not be included
+                            event:
+                                $ref: '#/components/examples/FileNew'
+            responses:
+                '201':
+                    description: file record is successfully created
+                    content:
+                        'application/vnd.api+json':
+                            schema: 
+                                type: object
+                                required:
+                                -   data
+                                -   included
+                                properties:
+                                    data:
+                                        $ref: '#/components/schemas/File'
+                            examples:
+                                file:
+                                    $ref: '#/components/examples/FileNewResponse'
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+        patch:
+            summary: update a file object and set its status to active
+            operationId: file.update
+            tags:
+            -   file
+            parameters:
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            requestBody:
+                required: true
+                content:
+                    'application/vnd.api+json':
+                        schema: 
+                            type: object
+                            required:
+                            -   data
+                            properties:
+                                data:
+                                    $ref: '#/components/schemas/File'
+                        examples:
+                            file:
+                                $ref: '#/components/examples/FileUpdate'
+            responses:
+                '200':
+                    description: file object is updated successfully
+                    content:
+                        'application/vnd.api+json':
+                            schema: 
+                                type: object
+                                required:
+                                -   data
+                                properties:
+                                    data:
+                                        $ref: '#/components/schemas/File'
+                            examples:
+                                file:
+                                    $ref: '#/components/examples/FileUpdateResponse'
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error400:
+                                    $ref: '#/components/examples/Error400'
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+    /file/{id}:
+        delete:
+            summary: delete a file record
+            operationId: file.delete
+            tags:
+            -   file
+            parameters:
+            -   $ref: '#/components/parameters/PathID'
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            responses:
+                '204':
+                    description: file record is successfully deleted
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+    /files:
+        get:
+            summary: obtain Shared Access Signature (SAS) for downloading resources
+            operationId: files.get
+            tags:
+            -   file
+            parameters:
+            -   $ref: '#/components/parameters/HeaderTokenID'
+            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            -   name: type
+                in: query
+                description: Type of the resources requested, default is 'images'
+                required: false
+                schema:
+                    type: string
+            responses:
+                '200':
+                    description: SAS is generated successfully
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                type: object
+                                properties:
+                                    meta:
+                                        $ref: '#/components/x-definitions/AzureBlobMeta'
+                            examples:
+                                files:
+                                    $ref: '#/components/examples/FilesGet'
                 default:
                     description: unexpected error occured
                     content:
@@ -627,17 +973,50 @@ components:
             -   type
             properties:
                 type:
-                    description: type of Event object, which is just `eventSignup`
+                    description: type of EventSignup object, which is just `event_signup`
                     type: string
                     enum:
-                    -   eventSignup
+                    -   event_signup
                 attributes:
                     $ref: '#/components/x-definitions/TimeFields'
                 relationships:
                     allOf:
                     -   $ref: '#/components/x-definitions/EventRelationship'
                     -   $ref: '#/components/x-definitions/UserRelationship'
-                        
+        File:
+            description: a file uploading record
+            type: object
+            required:
+            -   type
+            properties:
+                type:
+                    description: type of File object, which is just `file`
+                    type: string
+                    enum:
+                    -   file
+                attributes:
+                    allOf:
+                    -   $ref: '#/components/x-definitions/TimeFields'
+                    -
+                        type: object
+                        properties:
+                            filename:
+                                description: filename of the file (storing at Azure Blob)
+                                type: string
+                            status:
+                                type: string
+                                enum:
+                                -   created
+                                -   active
+                                -   destroyed
+                            type:
+                                type: string
+                                enum:
+                                -   images
+                relationships:
+                    $ref: '#/components/x-definitions/UploaderRelationship'
+                meta:
+                    $ref: '#/components/x-definitions/AzureBlobMeta'
     # definitions of data types
     x-definitions:
         Errors:
@@ -769,6 +1148,23 @@ components:
             properties:
                 related:
                     type: string
+        AzureBlobMeta:
+            description: meta information of the Azure Blob SAS
+            type: object
+            required:
+            -   endpoint
+            -   qp
+            -   qp_expires_at
+            properties:
+                endpoint:
+                    description: Azure blob service API endpoint for uploading/downloading resources
+                    type: string
+                qp:
+                    description: Query parameter with authorization signature
+                    type: string
+                qp_expires_at:
+                    description: Expiry time of the query parameter (and signature)
+                    type: string
         # relationship base definition and extended definitions (with type field fixed)
         RelationshipData:
             type: object
@@ -820,7 +1216,26 @@ components:
                                 properties:
                                     type:
                                         enum:
-                                        -   organizer
+                                        -   user
+        UploaderRelationship:
+            type: object
+            # set to 'required' since all usages of this relationship marks it necessary to be present
+            required:
+            -   uploader
+            properties:
+                uploader:
+                    allOf:
+                    -   
+                        $ref: '#/components/x-definitions/Relationship'
+                    -
+                        type: object
+                        properties:
+                            data:
+                                type: object
+                                properties:
+                                    type:
+                                        enum:
+                                        -   user
         EventRelationship:
             type: object
             properties:
@@ -870,7 +1285,8 @@ components:
                                     properties:
                                         type:
                                             enum:
-                                            -   event_signups
+                                            -   event_signup
+                                            
     parameters:
         PathID:
             name: id
@@ -945,6 +1361,9 @@ components:
                     type: token
                     id: '1'
                     attributes:
+                        nusid: e1234567
+                        email: e1234567@u.nus.edu
+                        fullname: Alicia Koh
                         secret: 65f60824-9e88-11ea-bb37-0242ac130002
                         status: created
                         created_at: '2020-06-08T09:04:45Z'
@@ -1192,18 +1611,18 @@ components:
             summary: object used to create a new signup record
             value:
                 data:
-                    type: eventSignup
+                    type: event_signup
                     relationships:
                         event:
                             data:
                                 type: event
                                 id: '1'
         EventSignupAllAttributes:
-            summary: a complete eventSignup object with all attributes
+            summary: a complete EventSignup object with all attributes
             value:
                 data:
                     id: 1
-                    type: eventSignup
+                    type: event_signup
                     attributes:
                         created_at: '2020-06-19T12:54:00Z'
                         updated_at: '2020-06-19T12:54:00Z'
@@ -1245,6 +1664,67 @@ components:
                         updated_at: '2020-06-08T09:04:45Z'
                     links:
                         self: 'http://127.0.0.1:8080/api/event/1'
+        FileNew:
+            summary: New file object
+            value:
+                data:
+                    type: file
+                    attributes:
+                        filename: somephoto.jpg
+                        type: images
+        FileNewResponse:
+            summary: response of new file object, with uploading parameters provided
+            value:
+                data:
+                    type: file
+                    id: '1'
+                    attributes:
+                        filename: 574441ef-357c-4e82-b5fb-f597b3aeb6ff.jpg
+                        type: images
+                        status: created
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    relationships:
+                        uploader:
+                            data:
+                                type: user
+                                id: 1
+                    meta:
+                        endpoint: 'https://schrodingerbox.blob.core.windows.net/images/574441ef-357c-4e82-b5fb-f597b3aeb6ff.jpg'
+                        qp: 'se=2020-07-06T09%3A03%3A52Z&sig=O77eDHQU79RUANWxoO%2Fp8G7e3ZMBrhUN9XXXXXXXXXX2Bc%3D&sp=c&spr=https&sr=b&sv=2019-02-02'
+                        qp_expires_at: '2020-07-06T09:03:22Z'
+        FileUpdate:
+            summary: File object to update status to 'active'
+            value:
+                data:
+                    type: file
+                    id: '1'
+                    attributes:
+                        status: active
+        FileUpdateResponse:
+            summary: File object response after status set to active
+            value:
+                data:
+                    type: file
+                    id: '1'
+                    attributes:
+                        filename: 574441ef-357c-4e82-b5fb-f597b3aeb6ff.jpg
+                        type: images
+                        status: active
+                        created_at: '2020-06-08T09:04:45Z'
+                        updated_at: '2020-06-08T09:04:45Z'
+                    relationships:
+                        uploader:
+                            data:
+                                type: user
+                                id: 1
+        FilesGet:
+            summary: Meta object with SAS for downloading resources
+            value:
+                meta:
+                    endpoint: 'https://schrodingerbox.blob.core.windows.net/images/574441ef-357c-4e82-b5fb-f597b3aeb6ff.jpg'
+                    qp: 'se=2020-07-06T09%3A03%3A52Z&sig=O77eDHQU79RUANWxoO%2Fp8G7e3ZMBrhUN9XXXXXXXXXX2Bc%3D&sp=c&spr=https&sr=b&sv=2019-02-02'
+                    qp_expires_at: '2020-07-06T09:03:22Z'
         Error400:
             summary: 400 Bad Request
             value:
