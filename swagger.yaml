@@ -913,6 +913,10 @@ components:
                                 -   individual    # Individual student
                                 -   org_student   # CCAs, interest groups
                                 -   org_official  # offices, libraries, faculties, NUSSUs
+                            email_md5:
+                                description: md5 hash of user's email address, used for Gravatar and other services
+                                type: string
+                                pattern: ^[a-f0-9]{32}$
                     -
                         $ref: '#/components/x-definitions/IdentityFields'
                     -
@@ -1378,6 +1382,7 @@ components:
                         nickname: Ailie
                         nusid: e1234567
                         email: e1234567@u.nus.edu
+                        email_md5: dbcb7f47db3e119a6a2ee8090e328bf4
                         fullname: Alicia Koh
                         type: individual
                         created_at: '2020-06-08T09:04:45Z'
@@ -1394,6 +1399,7 @@ components:
                         nickname: Ailie
                         nusid: e1234567
                         email: e1234567@u.nus.edu
+                        email_md5: dbcb7f47db3e119a6a2ee8090e328bf4
                         fullname: Alicia Koh
                         type: individual
                         created_at: '2020-06-08T09:04:45Z'
@@ -1464,6 +1470,7 @@ components:
                     attributes:
                         nickname: Allie
                         type: individual
+                        email_md5: dbcb7f47db3e119a6a2ee8090e328bf4
                         created_at: '2020-06-08T09:04:45Z'
                         updated_at: '2020-06-08T09:04:45Z'
                     links:
@@ -1521,6 +1528,7 @@ components:
                     attributes:
                         nickname: Allie
                         type: individual
+                        email_md5: dbcb7f47db3e119a6a2ee8090e328bf4
                         created_at: '2020-06-08T09:04:45Z'
                         updated_at: '2020-06-08T09:04:45Z'
                     links:
@@ -1565,6 +1573,7 @@ components:
                     attributes:
                         nickname: Allie
                         type: individual
+                        email_md5: dbcb7f47db3e119a6a2ee8090e328bf4
                         created_at: '2020-06-08T09:04:45Z'
                         updated_at: '2020-06-08T09:04:45Z'
                     links:
@@ -1576,6 +1585,7 @@ components:
                     attributes:
                         nickname: Demo Participant
                         type: individual
+                        email_md5: dbcb7f47db3e119a6a2ee8090e328bf5
                         created_at: '2020-06-08T09:04:45Z'
                         updated_at: '2020-06-08T09:04:45Z'
                     links:
@@ -1642,6 +1652,7 @@ components:
                     attributes:
                         nickname: Allie
                         type: individual
+                        email_md5: dbcb7f47db3e119a6a2ee8090e328bf4
                         created_at: '2020-06-08T09:04:45Z'
                         updated_at: '2020-06-08T09:04:45Z'
                     links:
