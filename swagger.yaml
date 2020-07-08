@@ -3,7 +3,13 @@ info:
     title: Schrodinger's Box
     version: 1.0.0
 servers:
--   url: 'http://schrodinger-box-test.ixnet.work:9173/api'
+-   description: Localhost testing server
+    url: 'http://127.0.0.1:8080/api'
+-   description: Public testing server
+    url: 'http://schrodinger-box-test.ixnet.work:9173/api'
+security:
+-   TokenID: []
+    TokenSecret: []
 paths:
     /uptime:
         get:
@@ -11,6 +17,7 @@ paths:
             operationId: uptime
             tags:
             -   miscellaneous
+            security: []
             responses:
                 '200':
                     description: uptime generated
@@ -39,6 +46,7 @@ paths:
             operationId: token.create
             tags:
             -   authentication
+            security: []
             requestBody:
                 required: true
                 content:
@@ -82,9 +90,7 @@ paths:
             operationId: token.get
             tags:
             -   authentication
-            parameters:
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
+            security: []
             responses:
                 '200':
                     description: token found and returned
@@ -117,9 +123,6 @@ paths:
             operationId: user.create
             tags:
             -   user
-            parameters:
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
             requestBody:
                 required: true
                 content:
@@ -169,9 +172,6 @@ paths:
             operationId: user.update
             tags:
             -   user
-            parameters:
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
             requestBody:
                 required: true
                 content:
@@ -233,9 +233,6 @@ paths:
             operationId: user.get_self
             tags:
             -   user
-            parameters:
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
             responses:
                 '200':
                     description: user object is successfully found
@@ -281,9 +278,6 @@ paths:
             operationId: user.delete
             tags:
             -   user
-            parameters:
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
             responses:
                 '204':
                     description: user is successfully deleted
@@ -310,8 +304,6 @@ paths:
             -   user
             parameters:
             -   $ref: '#/components/parameters/PathID'
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
             responses:
                 '200':
                     description: user object is successfully found
@@ -359,9 +351,6 @@ paths:
             operationId: event.create
             tags:
             -   event
-            parameters:
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
             requestBody:
                 required: true
                 content:
@@ -420,8 +409,6 @@ paths:
             -   event
             parameters:
             -   $ref: '#/components/parameters/PathID'
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
             responses:
                 '200':
                     description: event object is successfully found
@@ -468,8 +455,6 @@ paths:
             -   event
             parameters:
             -   $ref: '#/components/parameters/PathID'
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
             responses:
                 '204':
                     description: event is successfully deleted
@@ -494,9 +479,6 @@ paths:
             operationId: event.signup.create
             tags:
             -   event
-            parameters:
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
             requestBody:
                 required: true
                 content:
@@ -557,8 +539,6 @@ paths:
             -   event
             parameters:
             -   $ref: '#/components/parameters/PathID'
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
             responses:
                 '204':
                     description: signup record is successfully deleted
@@ -584,8 +564,6 @@ paths:
             tags:
             -   event
             parameters:
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
             -
                 name: sort
                 description: Order of results presented, accepts properties of an event object (e.g. id). Prefix properties with - means order in decending way (e.g. -id)
@@ -668,9 +646,6 @@ paths:
             operationId: file.create
             tags:
             -   file
-            parameters:
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
             requestBody:
                 required: true
                 content:
@@ -720,9 +695,6 @@ paths:
             operationId: file.update
             tags:
             -   file
-            parameters:
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
             requestBody:
                 required: true
                 content:
@@ -777,8 +749,6 @@ paths:
             -   file
             parameters:
             -   $ref: '#/components/parameters/PathID'
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
             responses:
                 '204':
                     description: file record is successfully deleted
@@ -804,8 +774,6 @@ paths:
             tags:
             -   file
             parameters:
-            -   $ref: '#/components/parameters/HeaderTokenID'
-            -   $ref: '#/components/parameters/HeaderTokenSecret'
             -   name: type
                 in: query
                 description: Type of the resources requested, default is 'images'
@@ -1299,20 +1267,6 @@ components:
             required: true
             schema:
                 $ref: '#/components/x-definitions/ID'
-        HeaderTokenID:
-            name: X-Token-ID
-            in: header
-            description: ID of the token used for authentication and authorization
-            required: true
-            schema:
-                $ref: '#/components/x-definitions/ID'
-        HeaderTokenSecret:
-            name: X-Token-Secret
-            in: header
-            description: Secret of the token used for authentication and authorization
-            required: true
-            schema:
-                $ref: '#/components/x-definitions/Secret'
     examples:
         LocationOnline1:
             summary: example for an online location with URL
@@ -1779,3 +1733,14 @@ components:
                     status: '500'
                     code: error.internal
                     title: something unexpected happened at the server side
+    securitySchemes:
+        TokenID:
+            type: apiKey
+            description: ID of the Token object
+            name: X-Token-ID
+            in: header
+        TokenSecret:
+            type: apiKey
+            description: Secret of the Token object
+            name: X-Token-Secret
+            in: header
