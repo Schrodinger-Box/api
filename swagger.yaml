@@ -3,10 +3,10 @@ info:
     title: Schrodinger's Box
     version: 1.0.0
 servers:
+-   description: Public server
+    url: 'https://schrodinger-box.pit.ovh/api'
 -   description: Localhost testing server
     url: 'http://127.0.0.1:8080/api'
--   description: Public testing server
-    url: 'http://schrodinger-box-test.ixnet.work:9173/api'
 security:
 -   TokenID: []
     TokenSecret: []
@@ -531,6 +531,61 @@ paths:
                                     $ref: '#/components/examples/Error404'
                                 error500:
                                     $ref: '#/components/examples/Error500'
+        patch:
+            summary: update a new signup record (marking attendance or review events)
+            operationId: event.signup.update-
+            tags:
+            -   event
+            requestBody:
+                required: true
+                content:
+                    'application/vnd.api+json':
+                        schema: 
+                            type: object
+                            required:
+                            -   data
+                            properties:
+                                data:
+                                    $ref: '#/components/schemas/EventSignup'
+                        examples:
+                            participant:
+                                $ref: '#/components/examples/EventSignupUpdateParticipant'
+                            organizer:
+                                $ref: '#/components/examples/EventSignupUpdateOrganizer'
+            responses:
+                '200':
+                    description: signup record is successfully updated
+                    content:
+                        'application/vnd.api+json':
+                            schema: 
+                                type: object
+                                required:
+                                -   data
+                                -   included
+                                properties:
+                                    data:
+                                        $ref: '#/components/schemas/EventSignup'
+                                    included:
+                                        type: array
+                                        items:
+                                            anyOf:
+                                            -   $ref: '#/components/schemas/User'
+                                            -   $ref: '#/components/schemas/Event'
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
+                                error500:
+                                    $ref: '#/components/examples/Error500'  
     /event_signup/{id}:
         delete:
             summary: delete a signup record
@@ -570,6 +625,15 @@ paths:
                 in: query
                 schema:
                     type: string
+            -
+                name: filter
+                description: Restriction to filter results from the database, in the format 'organizer_id,1' or 'type,<>,sports' or 'time_begin,<,2020-07-03'
+                in: query
+                schema:
+                    type: array
+                    items:
+                        type: string
+                        pattern: ^[^,]+,[^,]+(?:,[^,]+)?$
             -
                 name: page
                 description: Index of the page requested, starting from 0 as the first page
@@ -936,6 +1000,7 @@ components:
                     allOf:
                     -   $ref: '#/components/x-definitions/OrganizerRelationship'
                     -   $ref: '#/components/x-definitions/EventSignupsRelationship'
+                    -   $ref: '#/components/x-definitions/ImagesRelationship'
                 links:
                     $ref: '#/components/x-definitions/SelfLink'
         EventSignup:
@@ -949,8 +1014,28 @@ components:
                     type: string
                     enum:
                     -   event_signup
+                id:
+                    $ref: '#/components/x-definitions/ID'
                 attributes:
-                    $ref: '#/components/x-definitions/TimeFields'
+                    allOf:
+                    -   $ref: '#/components/x-definitions/TimeFields'
+                    -
+                        type: object
+                        properties:
+                            status:
+                                description: status of this signup record
+                                type: string
+                                enum:
+                                -   created
+                                -   attended
+                                -   reviewed
+                                -   withdrawn
+                            review_score:
+                                description: score of the event rated by the participant
+                                type: integer
+                            review_text:
+                                description: text comment left by the participant
+                                type: string
                 relationships:
                     allOf:
                     -   $ref: '#/components/x-definitions/EventRelationship'
@@ -966,6 +1051,8 @@ components:
                     type: string
                     enum:
                     -   file
+                id:
+                    $ref: '#/components/x-definitions/ID'
                 attributes:
                     allOf:
                     -   $ref: '#/components/x-definitions/TimeFields'
@@ -1258,7 +1345,24 @@ components:
                                         type:
                                             enum:
                                             -   event_signup
-                                            
+        ImagesRelationship:
+            type: object
+            properties:
+                images:
+                    allOf:
+                    -   
+                        $ref: '#/components/x-definitions/Relationships'
+                    -
+                        type: object
+                        properties:
+                            data:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        type:
+                                            enum:
+                                            -   file
     parameters:
         PathID:
             name: id
@@ -1571,6 +1675,15 @@ components:
                             address: 2 Sports Drive 1
                             building: University Sports Centre
                         type: sports
+                    relationships:
+                        images:
+                            data:
+                            -   
+                                type: file
+                                id: '1'
+                            -
+                                type: file
+                                id: '2'
         EventSignupNew:
             summary: object used to create a new signup record
             value:
@@ -1581,6 +1694,24 @@ components:
                             data:
                                 type: event
                                 id: '1'
+        EventSignupUpdateParticipant:
+            summary: event_signup update request by the participant (review)
+            value:
+                data:
+                    id: '1'
+                    type: event_signup
+                    attributes:
+                        status: reviewed
+                        review_score: 5
+                        review_text: This event is brilliant and I enjoyed participating it!
+        EventSignupUpdateOrganizer:
+            summary: event_signup update request by the organizer (marking attendance)
+            value:
+                data:
+                    id: '1'
+                    type: event_signup
+                    attributes:
+                        status: attended
         EventSignupAllAttributes:
             summary: a complete EventSignup object with all attributes
             value:
@@ -1588,6 +1719,7 @@ components:
                     id: 1
                     type: event_signup
                     attributes:
+                        status: created
                         created_at: '2020-06-19T12:54:00Z'
                         updated_at: '2020-06-19T12:54:00Z'
                     relationships:
