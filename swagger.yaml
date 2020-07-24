@@ -872,6 +872,72 @@ paths:
                                     $ref: '#/components/examples/Error404'
                                 error500:
                                     $ref: '#/components/examples/Error500'
+    /sms_bind/{number}:
+        post:
+            summary: bind a handphone number to a user to receive SMS notifications
+            operationId: user.sms.bind
+            tags:
+            -   sms_bind
+            parameters:
+            -   $ref: '#/components/parameters/PathNumber'
+            requestBody:
+                required: true
+                content:
+                    'application/vnd.api+json':
+                        schema: 
+                            type: object
+                            properties:
+                                meta:
+                                    type: object
+                                    properties:
+                                        verification_code:
+                                            description: if not present, a new code will be generated; if not, will try to check and bind this number to the user account if code is correct
+                        examples:
+                            new:
+                                $ref: '#/components/examples/SMSBindNewCode'
+                            verify:
+                                $ref: '#/components/examples/SMSBindVerifyCode'
+            responses:
+                '204':
+                    description: A new code is generated, or the number is successfully bound
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
+        delete:
+            summary: unbind the handphone number from the user's account
+            operationId: user.sms.unbind
+            tags:
+            -   sms_bind
+            parameters:
+            -   $ref: '#/components/parameters/PathNumber'
+            responses:
+                '204':
+                    description: The number is successfully unbound from the user account
+                default:
+                    description: unexpected error occured
+                    content:
+                        'application/vnd.api+json':
+                            schema:
+                                $ref: '#/components/x-definitions/Errors'
+                            examples:
+                                error401:
+                                    $ref: '#/components/examples/Error401'
+                                error403:
+                                    $ref: '#/components/examples/Error403'
+                                error404:
+                                    $ref: '#/components/examples/Error404'
+                                error500:
+                                    $ref: '#/components/examples/Error500'
 components:
     schemas:
         Token:
@@ -1371,6 +1437,13 @@ components:
             required: true
             schema:
                 $ref: '#/components/x-definitions/ID'
+        PathNumber:
+            name: number
+            in: path
+            description: the number to be bound to the user account, starting with country code (+65)
+            required: true
+            schema:
+                type: string
     examples:
         LocationOnline1:
             summary: example for an online location with URL
@@ -1819,9 +1892,18 @@ components:
             summary: Meta object with SAS for downloading resources
             value:
                 meta:
-                    endpoint: 'https://schrodingerbox.blob.core.windows.net/images/574441ef-357c-4e82-b5fb-f597b3aeb6ff.jpg'
-                    qp: 'se=2020-07-06T09%3A03%3A52Z&sig=O77eDHQU79RUANWxoO%2Fp8G7e3ZMBrhUN9XXXXXXXXXX2Bc%3D&sp=c&spr=https&sr=b&sv=2019-02-02'
+                    endpoint: 'https://schrodingerbox.blob.core.windows.net/images/'
+                    qp: 'se=2020-07-20T07%3A48%3A41Z&sig=u5nnSXQvtpLTIZZoMiGXXXXXXXXXXX%2BxCPE%3D&sp=r&spr=https&sr=c&sv=2019-02-02'
                     qp_expires_at: '2020-07-06T09:03:22Z'
+        SMSBindNewCode:
+            summary: Request for generating a new verification code
+            value:
+                meta: {}
+        SMSBindVerifyCode:
+            summary: Check verification code and bind number if correct
+            value:
+                meta:
+                    verification_code: '123456'
         Error400:
             summary: 400 Bad Request
             value:
